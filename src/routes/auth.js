@@ -243,6 +243,7 @@ router.get("/callback", async (req, res) => {
     const tokens = await buzzk.oauth.get(code, state);
 
     if (!tokens) {
+        console.error("[auth/callback] Access Token 발급 실패. 치지직 API 오류 또는 code 만료 가능성이 있습니다.");
         return res.status(502).send(buildErrorHtml("Access Token 발급에 실패했습니다. 잠시 후 다시 시도해 주세요."));
     }
 
