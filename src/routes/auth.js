@@ -93,8 +93,6 @@ function buildSuccessHtml(accessToken, refreshToken, expiresIn, sessionId) {
     h1 { font-size: 1.4rem; margin-bottom: 0.5rem; color: #fff; }
     p { color: #aaa; font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.5; }
     code { background: #2a2a2a; padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; word-break: break-all; }
-    .token-box { background: #111; border: 1px solid #444; border-radius: 8px; padding: 0.8rem; margin: 1rem 0; text-align: left; font-size: 0.78rem; word-break: break-all; color: #ccc; }
-    .token-box span { color: #888; font-size: 0.72rem; display: block; margin-bottom: 4px; }
     button { background: #00c73c; color: #fff; border: none; border-radius: 8px; padding: 0.6rem 1.4rem; font-size: 0.9rem; cursor: pointer; margin: 0.3rem; }
     button:hover { background: #00a832; }
     button.secondary { background: #333; }
@@ -108,11 +106,7 @@ function buildSuccessHtml(accessToken, refreshToken, expiresIn, sessionId) {
     <div class="icon">&#x2705;</div>
     <h1>&#xCE58;&#xC9C0;&#xC9C1; &#xB85C;&#xADF8;&#xC778; &#xC644;&#xB8CC;</h1>
     <p id="desc">&#xC778;&#xC99D;&#xC774; &#xC644;&#xB8CC;&#xB418;&#xC5C8;&#xC2B5;&#xB2C8;&#xB2E4;.</p>
-    <div class="token-box">
-      <span>Access Token</span>${escapeHtml(accessToken)}
-    </div>
     <div>
-      <button onclick="copyToken()">Access Token &#xBCF5;&#xC0AC;</button>
       <button class="secondary" onclick="copyAll()">&#xC804;&#xCCB4; JSON &#xBCF5;&#xC0AC;</button>
     </div>
     ${sessionInfo}
@@ -121,13 +115,8 @@ function buildSuccessHtml(accessToken, refreshToken, expiresIn, sessionId) {
   <script>
     var tokenData = ${tokenData};
     var targetOrigin = ${JSON.stringify(targetOrigin)};
-    var allJson = JSON.stringify({ accessToken: tokenData.accessToken, refreshToken: tokenData.refreshToken, expiresIn: tokenData.expiresIn }, null, 2);
+    var allJson = JSON.stringify({ refreshToken: tokenData.refreshToken, expiresIn: tokenData.expiresIn }, null, 2);
 
-    function copyToken() {
-      navigator.clipboard.writeText(tokenData.accessToken).then(function() {
-        document.getElementById("status").textContent = "\u2714 Access Token\uC774 \uD074\uB9BD\uBCF4\uB4DC\uC5D0 \uBCF5\uC0AC\uB418\uC5C8\uC2B5\uB2C8\uB2E4.";
-      });
-    }
     function copyAll() {
       navigator.clipboard.writeText(allJson).then(function() {
         document.getElementById("status").textContent = "\u2714 \uC804\uCCB4 \uD1A0\uD070 \uC815\uBCF4\uAC00 \uD074\uB9BD\uBCF4\uB4DC\uC5D0 \uBCF5\uC0AC\uB418\uC5C8\uC2B5\uB2C8\uB2E4.";
@@ -140,10 +129,10 @@ function buildSuccessHtml(accessToken, refreshToken, expiresIn, sessionId) {
         document.getElementById("desc").textContent = "BridgeBBCC\uC5D0 \uD1A0\uD070\uC744 \uC804\uB2EC\uD588\uC2B5\uB2C8\uB2E4. \uCC3D\uC774 \uC790\uB3D9\uC73C\uB85C \uB2EB\uD799\uB2C8\uB2E4.";
         setTimeout(function() { window.close(); }, 2000);
       } catch(e) {
-        document.getElementById("desc").textContent = "\uD1A0\uD070 \uC804\uB2EC\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4. \uC704\uC758 Access Token\uC744 \uC9C1\uC811 \uBCF5\uC0AC\uD574 \uC0AC\uC6A9\uD558\uC138\uC694.";
+        document.getElementById("desc").textContent = "\uD1A0\uD070 \uC804\uB2EC\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4. \uCC3D\uC744 \uB2EB\uACE0 \uB2E4\uC2DC \uC2DC\uB3C4\uD558\uC138\uC694.";
       }
     } else {
-      document.getElementById("desc").textContent = "\uC704\uC758 Access Token\uC744 \uBCF5\uC0AC\uD558\uC5EC BridgeBBCC \uC124\uC815\uC5D0 \uC785\uB825\uD558\uC138\uC694.";
+      document.getElementById("desc").textContent = "\uC778\uC99D\uC774 \uC644\uB8CC\uB418\uC5C8\uC2B5\uB2C8\uB2E4.";
     }
   </script>
 </body>
