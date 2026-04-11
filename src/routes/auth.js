@@ -115,7 +115,7 @@ function buildSuccessHtml(accessToken, refreshToken, expiresIn, sessionId) {
   <script>
     var tokenData = ${tokenData};
     var targetOrigin = ${JSON.stringify(targetOrigin)};
-    var allJson = JSON.stringify({ refreshToken: tokenData.refreshToken, expiresIn: tokenData.expiresIn }, null, 2);
+    var allJson = JSON.stringify({ accessToken: tokenData.accessToken, refreshToken: tokenData.refreshToken, expiresIn: tokenData.expiresIn }, null, 2);
 
     function copyAll() {
       navigator.clipboard.writeText(allJson).then(function() {
