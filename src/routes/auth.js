@@ -75,9 +75,6 @@ function getPostMessageTargetOrigin() {
 function buildSuccessHtml(accessToken, refreshToken, expiresIn, sessionId) {
     const tokenData = JSON.stringify({ type: "CHZZK_TOKEN", accessToken, refreshToken, expiresIn });
     const targetOrigin = getPostMessageTargetOrigin();
-    const sessionInfo = sessionId
-        ? `<p id="session-info">세션 ID: <code>${escapeHtml(sessionId)}</code><br>아래 엔드포인트로 토큰을 가져올 수 있습니다:<br><code>GET /auth/token/${escapeHtml(sessionId)}</code></p>`
-        : "";
 
     return `<!DOCTYPE html>
 <html lang="ko">
@@ -106,22 +103,11 @@ function buildSuccessHtml(accessToken, refreshToken, expiresIn, sessionId) {
     <div class="icon">&#x2705;</div>
     <h1>&#xCE58;&#xC9C0;&#xC9C1; &#xB85C;&#xADF8;&#xC778; &#xC644;&#xB8CC;</h1>
     <p id="desc">&#xC778;&#xC99D;&#xC774; &#xC644;&#xB8CC;&#xB418;&#xC5C8;&#xC2B5;&#xB2C8;&#xB2E4;.</p>
-    <div>
-      <button class="secondary" onclick="copyAll()">&#xC804;&#xCCB4; JSON &#xBCF5;&#xC0AC;</button>
-    </div>
-    ${sessionInfo}
     <div id="status"></div>
   </div>
   <script>
     var tokenData = ${tokenData};
     var targetOrigin = ${JSON.stringify(targetOrigin)};
-    var allJson = JSON.stringify({ accessToken: tokenData.accessToken, refreshToken: tokenData.refreshToken, expiresIn: tokenData.expiresIn }, null, 2);
-
-    function copyAll() {
-      navigator.clipboard.writeText(allJson).then(function() {
-        document.getElementById("status").textContent = "\u2714 \uC804\uCCB4 \uD1A0\uD070 \uC815\uBCF4\uAC00 \uD074\uB9BD\uBCF4\uB4DC\uC5D0 \uBCF5\uC0AC\uB418\uC5C8\uC2B5\uB2C8\uB2E4.";
-      });
-    }
 
     if (window.opener && !window.opener.closed) {
       try {
