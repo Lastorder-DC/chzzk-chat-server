@@ -5,6 +5,7 @@ const cors = require("cors");
 const buzzk = require("buzzk");
 
 const authRouter = require("./routes/auth");
+const sessionsRouter = require("./routes/sessions");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -37,6 +38,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/auth", authRouter);
+app.use("/sessions", sessionsRouter);
 
 app.listen(PORT, () => {
     console.log(`chzzk-chat-server listening on port ${PORT}`);
