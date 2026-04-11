@@ -81,10 +81,11 @@ async function proxyUserPost(req, res, path) {
     if (!authorization) return;
 
     try {
-        const response = await axios.post(`${CHZZK_API_BASE}${path}`, req.body, {
+        const formData = new URLSearchParams(req.body);
+        const response = await axios.post(`${CHZZK_API_BASE}${path}`, formData, {
             headers: {
                 Authorization: authorization,
-                "Content-Type": "application/json"
+                "Content-Type": "application/x-www-form-urlencoded"
             }
         });
         return res.status(response.status).json(response.data);
