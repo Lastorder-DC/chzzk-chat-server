@@ -7,7 +7,7 @@ Chzzk Chat Server for ChatAssistX
 
 ### 1. 사전 준비
 
-- [Node.js](https://nodejs.org/) 18 이상
+- [Node.js](https://nodejs.org/) v18.x 이상
 - [치지직 개발자 센터](https://developers.chzzk.naver.com/application)에서 애플리케이션 등록 및 `CLIENT_ID`, `CLIENT_SECRET` 발급
 
 ### 2. 저장소 클론 및 의존성 설치
