@@ -15,9 +15,17 @@
    - [GET /auth/token/:sessionId](#get-authtokensessionid)
    - [POST /auth/refresh](#post-authrefresh)
    - [POST /auth/revoke](#post-authrevoke)
-4. [인증 흐름 전체 순서도](#인증-흐름-전체-순서도)
-5. [BridgeBBCC 연동 방법](#bridgebbcc-연동-방법)
-6. [오류 코드 및 응답](#오류-코드-및-응답)
+4. [세션 API 프록시](#세션-api-프록시)
+   - [GET /sessions](#get-sessions)
+   - [GET /sessions/client](#get-sessionsclient)
+   - [GET /sessions/auth](#get-sessionsauth)
+   - [GET /sessions/auth/client](#get-sessionsauthclient)
+   - [POST /sessions/events/subscribe/chat](#post-sessionseventssubscribechat)
+   - [POST /sessions/events/subscribe/donation](#post-sessionseventssubscribedonation)
+   - [POST /sessions/events/subscribe/subscription](#post-sessionseventssubscribesubscription)
+5. [인증 흐름 전체 순서도](#인증-흐름-전체-순서도)
+6. [BridgeBBCC 연동 방법](#bridgebbcc-연동-방법)
+7. [오류 코드 및 응답](#오류-코드-및-응답)
 
 ---
 
@@ -288,6 +296,256 @@ Access Token으로 해당 사용자의 **모든 Token(Access Token + Refresh Tok
 curl -X POST http://localhost:3000/auth/revoke \
   -H "Content-Type: application/json" \
   -d '{"accessToken": "eyJhbGci..."}'
+```
+
+---
+
+## 세션 API 프록시
+
+치지직 OpenAPI(`https://openapi.chzzk.naver.com`)에 CORS 헤더가 없어 브라우저에서 직접 호출할 수 없습니다.  
+아래 엔드포인트들은 해당 API를 CORS를 지원하는 이 서버를 통해 프록시합니다.
+
+> 💡 유저 인증이 필요한 엔드포인트는 요청 시 `Authorization: Bearer {accessToken}` 헤더를 반드시 포함해야 합니다.
+
+---
+
+### GET /sessions
+
+치지직 Open API: `GET /open/v1/sessions`  
+유저 Access Token 기반으로 생성된 세션 목록을 조회합니다.
+
+#### Headers
+
+| 헤더 | 필수 | 설명 |
+|------|:----:|------|
+| `Authorization` | ✅ | `Bearer {accessToken}` 형식 |
+
+#### Query Parameters
+
+| 파라미터 | 필수 | 설명 |
+|----------|:----:|------|
+| `size` | ❌ | 조회할 세션 개수 (1~50, default: 20) |
+| `page` | ❌ | 조회할 페이지, 0부터 (default: 0) |
+
+#### 응답 (HTTP 200)
+
+```json
+{
+  "code": 200,
+  "message": null,
+  "content": {
+    "data": [
+      {
+        "sessionKey": "...",
+        "connectedDate": "2024-01-01T00:00:00",
+        "disconnectedDate": null,
+        "subscribedEvents": [
+          { "eventType": "CHAT", "channelId": "..." }
+        ]
+      }
+    ]
+  }
+}
+```
+
+#### 예시 (curl)
+
+```bash
+curl http://localhost:3000/sessions \
+  -H "Authorization: Bearer eyJhbGci..."
+```
+
+---
+
+### GET /sessions/client
+
+치지직 Open API: `GET /open/v1/sessions/client`  
+Client 인증 기반으로 생성된 세션 목록을 조회합니다. 서버의 CLIENT_ID/CLIENT_SECRET을 사용합니다.
+
+#### Query Parameters
+
+| 파라미터 | 필수 | 설명 |
+|----------|:----:|------|
+| `size` | ❌ | 조회할 세션 개수 (1~50, default: 20) |
+| `page` | ❌ | 조회할 페이지, 0부터 (default: 0) |
+
+#### 응답 (HTTP 200)
+
+`GET /sessions` 응답과 동일한 구조
+
+#### 예시 (curl)
+
+```bash
+curl http://localhost:3000/sessions/client
+```
+
+---
+
+### GET /sessions/auth
+
+치지직 Open API: `GET /open/v1/sessions/auth`  
+유저 Access Token 기반으로 소켓 연결용 URL을 발급합니다. 유저별 최대 3개 연결을 유지할 수 있습니다.
+
+#### Headers
+
+| 헤더 | 필수 | 설명 |
+|------|:----:|------|
+| `Authorization` | ✅ | `Bearer {accessToken}` 형식 |
+
+#### 응답 (HTTP 200)
+
+```json
+{
+  "code": 200,
+  "message": null,
+  "content": {
+    "url": "https://ssio08.nchat.naver.com:443?auth=TOKEN"
+  }
+}
+```
+
+#### 예시 (curl)
+
+```bash
+curl http://localhost:3000/sessions/auth \
+  -H "Authorization: Bearer eyJhbGci..."
+```
+
+---
+
+### GET /sessions/auth/client
+
+치지직 Open API: `GET /open/v1/sessions/auth/client`  
+Client 인증 기반으로 소켓 연결용 URL을 발급합니다. 최대 10개 연결을 유지할 수 있습니다. 서버의 CLIENT_ID/CLIENT_SECRET을 사용합니다.
+
+#### 응답 (HTTP 200)
+
+`GET /sessions/auth` 응답과 동일한 구조
+
+#### 예시 (curl)
+
+```bash
+curl http://localhost:3000/sessions/auth/client
+```
+
+---
+
+### POST /sessions/events/subscribe/chat
+
+치지직 Open API: `POST /open/v1/sessions/events/subscribe/chat`  
+지정한 세션에 채팅 이벤트를 구독합니다. 관련 Scope: `채팅 메시지 조회`  
+구독 완료 시 소켓으로 구독 완료 메시지가 전달되며, 이후 채팅 발생 시 채팅 이벤트 메시지가 전달됩니다.
+
+> ⚠️ 세션당 최대 30개의 이벤트(채팅, 후원, 구독)를 구독할 수 있습니다.
+
+#### Headers
+
+| 헤더 | 필수 | 설명 |
+|------|:----:|------|
+| `Authorization` | ✅ | `Bearer {accessToken}` 형식 |
+
+#### Request Body
+
+```json
+{
+  "sessionKey": "세션 식별자",
+  "channelId": "구독할 채널 ID"
+}
+```
+
+#### 응답 (HTTP 200)
+
+```json
+{
+  "code": 200,
+  "message": null,
+  "content": null
+}
+```
+
+#### 예시 (curl)
+
+```bash
+curl -X POST http://localhost:3000/sessions/events/subscribe/chat \
+  -H "Authorization: Bearer eyJhbGci..." \
+  -H "Content-Type: application/json" \
+  -d '{"sessionKey": "...", "channelId": "..."}'
+```
+
+---
+
+### POST /sessions/events/subscribe/donation
+
+치지직 Open API: `POST /open/v1/sessions/events/subscribe/donation`  
+지정한 세션에 후원 이벤트를 구독합니다. 관련 Scope: `후원 조회`  
+구독 완료 시 소켓으로 구독 완료 메시지가 전달되며, 이후 후원 발생 시 후원 이벤트 메시지가 전달됩니다.
+
+> ⚠️ 세션당 최대 30개의 이벤트(채팅, 후원, 구독)를 구독할 수 있습니다.
+
+#### Headers
+
+| 헤더 | 필수 | 설명 |
+|------|:----:|------|
+| `Authorization` | ✅ | `Bearer {accessToken}` 형식 |
+
+#### Request Body
+
+```json
+{
+  "sessionKey": "세션 식별자",
+  "channelId": "구독할 채널 ID"
+}
+```
+
+#### 응답 (HTTP 200)
+
+`POST /sessions/events/subscribe/chat` 응답과 동일한 구조
+
+#### 예시 (curl)
+
+```bash
+curl -X POST http://localhost:3000/sessions/events/subscribe/donation \
+  -H "Authorization: Bearer eyJhbGci..." \
+  -H "Content-Type: application/json" \
+  -d '{"sessionKey": "...", "channelId": "..."}'
+```
+
+---
+
+### POST /sessions/events/subscribe/subscription
+
+치지직 Open API: `POST /open/v1/sessions/events/subscribe/subscription`  
+지정한 세션에 구독 이벤트를 구독합니다. 관련 Scope: `구독 조회`  
+구독 완료 시 소켓으로 구독 완료 메시지가 전달되며, 이후 구독 발생 시 구독 이벤트 메시지가 전달됩니다.
+
+> ⚠️ 세션당 최대 30개의 이벤트(채팅, 후원, 구독)를 구독할 수 있습니다.
+
+#### Headers
+
+| 헤더 | 필수 | 설명 |
+|------|:----:|------|
+| `Authorization` | ✅ | `Bearer {accessToken}` 형식 |
+
+#### Request Body
+
+```json
+{
+  "sessionKey": "세션 식별자",
+  "channelId": "구독할 채널 ID"
+}
+```
+
+#### 응답 (HTTP 200)
+
+`POST /sessions/events/subscribe/chat` 응답과 동일한 구조
+
+#### 예시 (curl)
+
+```bash
+curl -X POST http://localhost:3000/sessions/events/subscribe/subscription \
+  -H "Authorization: Bearer eyJhbGci..." \
+  -H "Content-Type: application/json" \
+  -d '{"sessionKey": "...", "channelId": "..."}'
 ```
 
 ---
